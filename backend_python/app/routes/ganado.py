@@ -94,7 +94,7 @@ async def sincronizar_lote(lote: List[Animal]):
 # Historia 3 — Registrar vacuna
 # ---------------------------------
 @router.post("/{codigoQR}/vacuna")
-async def agregar_vacuna(
+async def agregar_vacuna(   
     codigoQR: str,
     nueva_vacuna: Vacuna
 ):
