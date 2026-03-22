@@ -4,8 +4,10 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'screens/listado_screen.dart';
 import 'screens/registro_screen.dart';
+import 'screens/historial_screen.dart'; // ✅ NUEVO
 
 void main() {
+
   // Inicializar SQLite para Linux / Windows / Mac
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     sqfliteFfiInit();
@@ -24,45 +26,73 @@ class AgroScanApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.green,
       ),
-      home: MainNavigation(),
+
+      // ✅ CAMBIO → nuevo menú
+      home: MenuPrincipal(),
     );
   }
 }
 
-class MainNavigation extends StatefulWidget {
+
+// =======================================
+// NUEVO MENU CON 3 PESTAÑAS
+// =======================================
+
+class MenuPrincipal extends StatefulWidget {
   @override
-  State<MainNavigation> createState() => _MainNavigationState();
+  State<MenuPrincipal> createState() => _MenuPrincipalState();
 }
 
-class _MainNavigationState extends State<MainNavigation> {
-  int _index = 0;
+class _MenuPrincipalState extends State<MenuPrincipal> {
 
-  final List<Widget> _pantallas = [
-    ListadoScreen(),
-    RegistroScreen(),
+  int _actual = 0;
+
+  // ✅ 3 pantallas
+  final List<Widget> _paginas = [
+
+    ListadoScreen(),    // pendientes / sync
+
+    HistorialScreen(),  // nube
+
+    RegistroScreen(),   // nuevo animal
+
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pantallas[_index],
+
+      body: _paginas[_actual],
 
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _index,
+
+        currentIndex: _actual,
+
+        type: BottomNavigationBarType.fixed, // necesario para 3
+
         onTap: (i) {
           setState(() {
-            _index = i;
+            _actual = i;
           });
         },
+
         items: const [
+
           BottomNavigationBarItem(
-            icon: Icon(Icons.list),
-            label: "Inventario",
+            icon: Icon(Icons.sync),
+            label: "Pendientes",
           ),
+
           BottomNavigationBarItem(
-            icon: Icon(Icons.add),
-            label: "Registrar",
+            icon: Icon(Icons.cloud_done),
+            label: "Historial",
           ),
+
+          BottomNavigationBarItem(
+            icon: Icon(Icons.add_circle),
+            label: "Nuevo",
+          ),
+
         ],
       ),
     );

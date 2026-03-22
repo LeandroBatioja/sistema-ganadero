@@ -1,12 +1,10 @@
-import 'dart:convert';
-
 class Animal {
   final String codigoQR;
   final String raza;
   final double peso;
   final int edad;
   final String estadoSalud; // Para la Historia 4
-  final int sincronizado;   // 0 = No, 1 = Sí (Para la Historia 5)
+   int sincronizado;   // 0 = No, 1 = Sí (Para la Historia 5)
 
   Animal({
     required this.codigoQR,
