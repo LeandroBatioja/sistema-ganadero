@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../database/db_helper.dart';
 import '../models/animal_models.dart';
-import '../services/api_services.dart'; // ✅ NUEVO
+import '../services/api_services.dart';
 
 class RegistroScreen extends StatefulWidget {
   @override
@@ -13,9 +13,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final _dbHelper = DBHelper();
-
-  final _apiService = ApiService(); // ✅ NUEVO
-
+  final _apiService = ApiService();
 
   final _qrController = TextEditingController();
   final _razaController = TextEditingController();
@@ -23,15 +21,15 @@ class _RegistroScreenState extends State<RegistroScreen> {
   final _edadController = TextEditingController();
 
 
-
   // ============================================
-  // NUEVO GUARDADO AUTOMÁTICO ONLINE / OFFLINE
+  // GUARDAR ANIMAL (CORREGIDO)
   // ============================================
 
   void _guardarLocalmente() async {
 
     if (!_formKey.currentState!.validate()) return;
 
+    // ✅ SIEMPRE empieza en 0
     final nuevoAnimal = Animal(
       codigoQR: _qrController.text,
       raza: _razaController.text,
@@ -43,57 +41,58 @@ class _RegistroScreenState extends State<RegistroScreen> {
 
     try {
 
-      // ✅ intentar enviar al backend
-      bool exitoSincro =
+      // Intentar enviar al backend
+      bool exito =
           await _apiService
               .sincronizarConBackend(
                   [nuevoAnimal]);
 
-      if (exitoSincro) {
+      // ✅ SOLO si responde OK pasa a 1
+      if (exito) {
 
-        // guardamos como sincronizado
         nuevoAnimal.sincronizado = 1;
-
-        await _dbHelper.insertarAnimal(
-            nuevoAnimal);
 
         ScaffoldMessenger.of(context)
             .showSnackBar(
           SnackBar(
             content: Text(
-                "🚀 Registrada y subida a la nube automáticamente"),
+              "🚀 Registrada y subida a la nube",
+            ),
           ),
         );
 
       } else {
 
-        // guardar offline
-        await _dbHelper.insertarAnimal(
-            nuevoAnimal);
-
         ScaffoldMessenger.of(context)
             .showSnackBar(
           SnackBar(
             content: Text(
-                "💾 Guardado en local (Sin conexión al servidor)"),
+              "💾 Guardado offline",
+            ),
           ),
         );
       }
 
     } catch (e) {
 
-      // sin internet
-      await _dbHelper.insertarAnimal(
-          nuevoAnimal);
+      print("Modo offline");
+
+      // se queda en 0
 
       ScaffoldMessenger.of(context)
           .showSnackBar(
         SnackBar(
           content: Text(
-              "⚠️ Offline: Guardado en el teléfono"),
+            "⚠️ Sin conexión, guardado local",
+          ),
         ),
       );
     }
+
+
+    // ✅ Guardar UNA sola vez
+    await _dbHelper.insertarAnimal(
+        nuevoAnimal);
 
 
     // limpiar
@@ -120,7 +119,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
 
       body: Padding(
 
-        padding: EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16),
 
         child: Form(
 
@@ -132,9 +131,10 @@ class _RegistroScreenState extends State<RegistroScreen> {
 
               TextFormField(
                 controller: _qrController,
-                decoration: InputDecoration(
-                    labelText:
-                        "Código QR / Arete"),
+                decoration:
+                    InputDecoration(
+                        labelText:
+                            "Código QR / Arete"),
                 validator: (value) =>
                     value!.isEmpty
                         ? "Ingrese el código"
@@ -143,8 +143,9 @@ class _RegistroScreenState extends State<RegistroScreen> {
 
               TextFormField(
                 controller: _razaController,
-                decoration: InputDecoration(
-                    labelText: "Raza"),
+                decoration:
+                    InputDecoration(
+                        labelText: "Raza"),
                 validator: (value) =>
                     value!.isEmpty
                         ? "Ingrese la raza"
@@ -153,8 +154,10 @@ class _RegistroScreenState extends State<RegistroScreen> {
 
               TextFormField(
                 controller: _pesoController,
-                decoration: InputDecoration(
-                    labelText: "Peso (kg)"),
+                decoration:
+                    InputDecoration(
+                        labelText:
+                            "Peso (kg)"),
                 keyboardType:
                     TextInputType.number,
                 validator: (value) =>
@@ -165,9 +168,10 @@ class _RegistroScreenState extends State<RegistroScreen> {
 
               TextFormField(
                 controller: _edadController,
-                decoration: InputDecoration(
-                    labelText:
-                        "Edad (meses)"),
+                decoration:
+                    InputDecoration(
+                        labelText:
+                            "Edad (meses)"),
                 keyboardType:
                     TextInputType.number,
                 validator: (value) =>
@@ -179,10 +183,14 @@ class _RegistroScreenState extends State<RegistroScreen> {
               SizedBox(height: 20),
 
               ElevatedButton(
+
                 onPressed:
                     _guardarLocalmente,
-                child: Text(
-                    "Guardar en el Teléfono"),
+
+                child:
+                    Text(
+                        "Guardar en el Teléfono"),
+
                 style:
                     ElevatedButton.styleFrom(
                   backgroundColor:

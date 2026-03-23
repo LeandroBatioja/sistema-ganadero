@@ -8,7 +8,7 @@ class DBHelper {
 
 
   // ============================================
-  // CONEXIÓN SINGLETON
+  // CONEXIÓN
   // ============================================
 
   Future<Database> get database async {
@@ -32,8 +32,11 @@ class DBHelper {
     final path = join(dbPath, filePath);
 
     return await openDatabase(
+
       path,
+
       version: 1,
+
       onCreate: _createDB,
     );
   }
@@ -43,9 +46,13 @@ class DBHelper {
   // CREAR TABLA
   // ============================================
 
-  Future _createDB(Database db, int version) async {
+  Future _createDB(
+    Database db,
+    int version,
+  ) async {
 
     await db.execute('''
+
       CREATE TABLE ganado (
 
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -63,6 +70,7 @@ class DBHelper {
         sincronizado INTEGER DEFAULT 0
 
       )
+
     ''');
   }
 
@@ -71,12 +79,10 @@ class DBHelper {
   // INSERTAR / ACTUALIZAR
   // ============================================
 
-  Future<int> insertarAnimal(Animal animal) async {
+  Future<int> insertarAnimal(
+      Animal animal) async {
 
     final db = await database;
-
-    // ✅ IMPORTANTE:
-    // animal.toMap() debe incluir sincronizado
 
     return await db.insert(
 
@@ -91,16 +97,44 @@ class DBHelper {
 
 
   // ============================================
-  // SOLO LOS QUE NO SE HAN SUBIDO
+  // PENDIENTES (sincronizado = 0)
   // ============================================
 
-  Future<List<Animal>> obtenerPendientes() async {
+  Future<List<Animal>>
+      obtenerPendientes() async {
 
     final db = await database;
 
     final res = await db.query(
+
       'ganado',
+
       where: 'sincronizado = 0',
+    );
+
+    return res
+        .map(
+          (map) =>
+              Animal.fromMap(map),
+        )
+        .toList();
+  }
+
+
+  // ============================================
+  // SINCRONIZADOS (sincronizado = 1)
+  // ============================================
+
+  Future<List<Animal>>
+      obtenerSincronizados() async {
+
+    final db = await database;
+
+    final res = await db.query(
+
+      'ganado',
+
+      where: 'sincronizado = 1',
     );
 
     return res
@@ -116,11 +150,13 @@ class DBHelper {
   // TODOS
   // ============================================
 
-  Future<List<Animal>> obtenerTodos() async {
+  Future<List<Animal>>
+      obtenerTodos() async {
 
     final db = await database;
 
-    final res = await db.query('ganado');
+    final res =
+        await db.query('ganado');
 
     return res
         .map(

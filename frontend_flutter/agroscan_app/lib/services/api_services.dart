@@ -5,139 +5,241 @@ import '../models/animal_models.dart';
 class ApiService {
 
   // ✅ IP de tu backend FastAPI
-  static const String baseUrl = "http://192.168.100.17:8000/ganado";
+  static const String baseUrl =
+      "http://192.168.100.17:8000/ganado";
 
 
   // =========================================================
-  // 1. SINCRONIZAR ANIMALES (Historia 5)
+  // 1. OBTENER TODO EL GANADO DESDE MONGODB (GET /ganado)
   // =========================================================
-  Future<bool> sincronizarConBackend(List<Animal> pendientes) async {
+
+  Future<List<Animal>> obtenerTodoElGanado() async {
+
     try {
 
-      // Convertir lista a JSON
+      final response =
+          await http.get(
+        Uri.parse(baseUrl),
+      );
+
+      if (response.statusCode == 200) {
+
+        List<dynamic> body =
+            jsonDecode(response.body);
+
+        return body
+            .map((item) =>
+                Animal.fromMap(item))
+            .toList();
+      }
+
+      return [];
+
+    } catch (e) {
+
+      print(
+          "Error al conectar con el servidor: $e");
+
+      return [];
+    }
+  }
+
+
+  // =========================================================
+  // 2. SINCRONIZAR ANIMALES (POST /ganado/sync)
+  // =========================================================
+
+  Future<bool> sincronizarConBackend(
+      List<Animal> pendientes) async {
+
+    try {
+
       List<Map<String, dynamic>> data =
-          pendientes.map((a) => a.toMap()).toList();
+          pendientes
+              .map((a) => a.toMap())
+              .toList();
 
       final response = await http.post(
+
         Uri.parse("$baseUrl/sync"),
-        headers: {"Content-Type": "application/json"},
+
+        headers: {
+          "Content-Type":
+              "application/json"
+        },
+
         body: jsonEncode(data),
       );
 
       if (response.statusCode == 200) {
-        print(">>> Sincronización exitosa <<<");
+
+        print(
+            ">>> Sincronización exitosa <<<");
+
         return true;
+
       } else {
-        print("Error servidor: ${response.body}");
+
+        print(
+            "Error servidor: ${response.body}");
+
         return false;
       }
 
     } catch (e) {
+
       print("Error red: $e");
+
       return false;
     }
   }
 
 
   // =========================================================
-  // 2. OBTENER HISTORIAL
+  // 3. OBTENER HISTORIAL (GET /ganado/{qr}/historial)
   // =========================================================
-  Future<Map<String, dynamic>?> obtenerHistorial(String qr) async {
+
+  Future<Map<String, dynamic>?>
+      obtenerHistorial(String qr) async {
+
     try {
 
       final response =
-          await http.get(Uri.parse("$baseUrl/$qr/historial"));
+          await http.get(
+
+        Uri.parse(
+          "$baseUrl/$qr/historial",
+        ),
+      );
 
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+
+        return jsonDecode(
+            response.body);
       }
 
       return null;
 
     } catch (e) {
-      print("Error historial: $e");
+
+      print(
+          "Error historial: $e");
+
       return null;
     }
   }
 
 
   // =========================================================
-  // 3. REGISTRAR VACUNA
+  // 4. REGISTRAR VACUNA (POST /ganado/{qr}/vacuna)
   // =========================================================
+
   Future<bool> registrarVacuna(
-      String qr,
-      String nombre,
-      String dosis,
+
+    String qr,
+    String nombre,
+    String dosis,
+
   ) async {
 
     try {
 
-      final response = await http.post(
-        Uri.parse("$baseUrl/$qr/vacuna"),
+      final response =
+          await http.post(
+
+        Uri.parse(
+            "$baseUrl/$qr/vacuna"),
 
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type":
+              "application/json"
         },
 
-        // ✅ IMPORTANTE
-        // Debe coincidir con Pydantic en FastAPI
         body: jsonEncode({
+
           "tipo": nombre,
           "dosis": dosis,
+
         }),
       );
 
       if (response.statusCode == 200) {
+
         print("Vacuna guardada");
+
         return true;
+
       } else {
-        print("Error vacuna: ${response.body}");
+
+        print(
+            "Error vacuna: ${response.body}");
+
         return false;
       }
 
     } catch (e) {
-      print("Error red vacuna: $e");
+
+      print(
+          "Error red vacuna: $e");
+
       return false;
     }
   }
 
 
   // =========================================================
-  // 4. REGISTRAR REVISION
+  // 5. REGISTRAR REVISION (POST /ganado/{qr}/revision)
   // =========================================================
+
   Future<bool> registrarRevision(
-      String qr,
-      String obs,
-      String estado,
+
+    String qr,
+    String obs,
+    String estado,
+
   ) async {
 
     try {
 
-      final response = await http.post(
-        Uri.parse("$baseUrl/$qr/revision"),
+      final response =
+          await http.post(
+
+        Uri.parse(
+            "$baseUrl/$qr/revision"),
 
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type":
+              "application/json"
         },
 
-        // ✅ IMPORTANTE
-        // Debe coincidir con FastAPI
         body: jsonEncode({
+
           "observaciones": obs,
           "estado_salud": estado,
+
         }),
       );
 
       if (response.statusCode == 200) {
-        print("Revision guardada");
+
+        print(
+            "Revision guardada");
+
         return true;
+
       } else {
-        print("Error revision: ${response.body}");
+
+        print(
+            "Error revision: ${response.body}");
+
         return false;
       }
 
     } catch (e) {
-      print("Error red revision: $e");
+
+      print(
+          "Error red revision: $e");
+
       return false;
     }
   }
